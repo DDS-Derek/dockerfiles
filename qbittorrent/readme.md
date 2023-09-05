@@ -56,6 +56,7 @@
 | 20230529 | 4.5.3       | 2.0.9     | 3.18.0 | 1. 再一次优化`report-seed-files`减少70%时长；</br>2. `dl-finish`不再使用`%I`传参，而使用`%K`，已经部署好的使用`%I`也没有问题（除非会有混合种子或v2种子）；3. 增加`gen-dup`脚本，详见“命令”章节。 |
 | 20230619 | 4.5.4       | 2.0.9     | 3.18.2 | `gen-dup`脚本增加总计输出。 |
 | 20230830 | 4.5.5       | 2.0.9     | 3.18.3 | 抛弃`s6-overlay`，直接交给`tini`来捕获退出信号，在退出/停止容器时qB会自动保存配置和种子进度。定时任务改由低权限运行，日志记录在容器内的`/data/diy/crond.log`，不再输出到容器控制台。 |
+| 20230906 | 4.5.5       | 2.0.9     | 3.18.3 | 为保证用户安全，防止用户因使用反代并代理了127.0.0.1这种情况导致安全性降低，从2023年9月5日更新的镜像开始，创建容器需要新增设置两个环境变量：QB_USERNAME（登陆qBittorrent的用户名）和QB_PASSWORD（登陆qBittorrent的密码）。容器将在创建时使用这两个环境变量去设置（如已存在配置文件则是修改）登陆qBittorent的用户名和密码。如未设置这两个环境变量，或者保持为qBittorrent的默认值（默认用户名：admin，默认密码：adminadmin），则本容器附加的所有脚本、定时任务将无法继续使用。[详情](https://github.com/devome/dockerfiles/issues/101)。也因此镜像默认即安装好python，不再需要设置`INSTALL_PYTHON`这个环境变量。 |
 
 ## 环境变量清单
 
@@ -81,7 +82,7 @@
 |  4  | WEBUI_PORT              | 8080          | WebUI访问端口，建议自定义，如需公网访问，需要将qBittorrent和公网之间所有网关设备上都设置端口转发。 |
 |  5  | BT_PORT                 | 34567         | BT监听端口，建议自定义，如需达到`可连接`状态，需要将qBittorrent和公网之间所有网关设备上都设置端口转发。 |
 |  6  | TZ                      | Asia/Shanghai | 时区，可填内容详见：https://meetingplanner.io/zh-cn/timezone/cities |
-|  7  | INSTALL_PYTHON          | false         | 默认不安装python，如需要python（qBittorrent的搜索功能必须安装python），请设置为`true`，设置后将在首次启动容器时自动安装好。 |
+|  7  | INSTALL_PYTHON          | false         | 默认不安装python，如需要python（qBittorrent的搜索功能必须安装python），请设置为`true`，设置后将在首次启动容器时自动安装好。**从4.5.5起，默认安装好python，不再需要设置这个环境变量。** |
 |  8  | ENABLE_AUTO_CATEGORY    | true          | 4.3.7+可用。是否自动按tracker进行分类，默认为`true`开启，如需关闭，请设置为`false`。 |
 |  9  | CATEGORY_OR_TAG         | category      | 4.3.9及4.5.0+可用，当`ENABLE_AUTO_CATEGORY=true`时，控制自动分类是qBittorrent中的“分类”还是“标签”。设置为`category`（默认值）为“分类”，设置为`tag`为“标签”。当设置为`tag`时，由于标签不是唯一的，无法筛选出没有打上tracker标签的种子，所以运行`auto-cat -a`和`auto-cat -A`都将对全部种子按tracker打标签，种子多时比较耗时；而当设置为`category`时，运行`auto-cat -a`就只对未分类种子进行分类。 |
 |  10 | DL_FINISH_NOTIFY        | true          | 默认会在下载完成时向设定的通知渠道发送种子下载完成的通知消息，如不想收此类通知，则设置为`false`。 |
